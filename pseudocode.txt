@@ -1,0 +1,37 @@
+// Flowcharts realized usign https://code2flow.com/
+
+P1 creates challenge and bets;
+P2 accepts challenge and bets;
+// False if victory is claimed and accepted
+while(Game is active?){
+  P1 moves;
+  if (P2 accepts?) {
+    P2 moves;
+    if (P1 accepts?) {
+      
+    } else {
+      Open dispute;
+    }
+  } else {
+    Open dispute;
+  }
+}
+
+// P2 case is analogous
+while(!P1 moves?) {
+  if (Timeout?) {
+    while(!P2 claims victory?) {
+    }
+    P2 receives prize;
+    break;
+  }
+}
+
+Open dispute;
+Set candidate state;
+Compute random committee;
+while (!Votes greater than threshold?) {
+}
+Compute outcome;
+Reward majority;
+Close dispute;
