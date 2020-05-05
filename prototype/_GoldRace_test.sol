@@ -4,12 +4,12 @@ import "remix_tests.sol";
 import "remix_accounts.sol";
 import "./_GoldRace.sol";
 
-// https://medium.com/remix-ide/solidity-unit-testing-using-remix-tests-part-2-50a9f486ab5d
+// https://remix-ide.readthedocs.io/en/latest/unittesting_examples.html
 
 contract GoldRaceTest {
 
     GoldRace goldRace;
-    function beforeAll() public {
+    function beforeAll() public payable {
         goldRace = new GoldRace();
     }
     
@@ -22,3 +22,4 @@ contract GoldRaceTest {
         Assert.equal(goldRace.betAmount(), uint256(10), "betAmount should be equal to 10");
     }
 }
+

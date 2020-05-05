@@ -2,13 +2,14 @@ pragma solidity 0.6.7;
 
 contract GoldRace {
 
-    address payable public player1;
-    address payable public player2;
-    bool public player1Turn = true;
+    address payable public player1 = address(0);
+    address payable public player2 = address(0);
+    bool public isPlayer1Turn = true;
     uint256 public betAmount = 0;
     uint256 public moveExpiration;
     
-    bytes32 public state;
+    bytes public state;
+    bytes public proposedState;
     
     function createChallenge() public payable {
         require(player1 == address(0));
@@ -41,41 +42,42 @@ contract GoldRace {
         moveExpiration = now + 24 hours;
     }
     
-    // Example move: "0x67fad3bfa1e0321bd021ca805ce14876e50acac8ca8532eda8cbf924da565160"
-    function acceptStateAndMove(bytes32 _state) public {
+    // Example move: "0x67fa"
+    function acceptStateAndMove(bytes memory _proposedState) public {
         require(player1 != address(0));
         require(player2 != address(0));
         require(now < moveExpiration);
-        if (player1Turn) {
+        if (isPlayer1Turn) {
             require(msg.sender == player1);
         } else {
             require(msg.sender == player2);
         }
         
-        state = _state;
+        state = proposedState;
+        proposedState = _proposedState;
         
         moveExpiration = now + 24 hours;
-        player1Turn = !player1Turn;
+        isPlayer1Turn = !isPlayer1Turn;
     }
     
     function openDispute() public view {
         require(player1 != address(0));
         require(player2 != address(0));
         require(now < moveExpiration);
-        if (player1Turn) {
+        if (isPlayer1Turn) {
             require(msg.sender == player1);
         } else {
             require(msg.sender == player2);
         }
         
-        // Dispute logic
+        // Dispute logic (if proposedState is valid, it becomes state)
     }
 
     function claimTimeoutVictory() public {
         require(player1 != address(0));
         require(player2 != address(0));
         require(now >= moveExpiration);
-        if (player1Turn) {
+        if (isPlayer1Turn) {
             require(msg.sender == player2);
             player2.transfer(address(this).balance);
         } else {
@@ -88,4 +90,5 @@ contract GoldRace {
         betAmount = 0;
     }
 }
+
 
