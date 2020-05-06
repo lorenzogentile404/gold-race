@@ -9,9 +9,10 @@ contract GoldRace {
     bool public isPlayer1Turn = true;
     uint256 public betAmount = 0;
     uint256 public moveExpiration;
+    uint constant public timePerMove = 30 minutes;
     
-    bytes public state;
-    bytes public proposedState;
+    bytes public state = "";
+    bytes public proposedState = "";
     bool public isProposedStateAccepted = true;
     
     bool public isDisputeOpen = false;
@@ -54,7 +55,7 @@ contract GoldRace {
 
         player2 = msg.sender;
 
-        moveExpiration = now + 24 hours;
+        moveExpiration = now + timePerMove;
     }
     
     function acceptState() public {
@@ -78,6 +79,9 @@ contract GoldRace {
     
     // Example move: "0x67fa"
     function move(bytes memory _proposedState) public {
+        /* Note that _proposedState can include also a winning state
+        e.g., in the case of chess Qh5# indicates that the Queen goes 
+        to h5 and it is checkmate. */
         require(!isDisputeOpen);
         
         require(isProposedStateAccepted == true);
@@ -94,7 +98,7 @@ contract GoldRace {
         
         proposedState = _proposedState;
         
-        moveExpiration = now + 24 hours;
+        moveExpiration = now + timePerMove;
         isPlayer1Turn = !isPlayer1Turn;
         isProposedStateAccepted = false;
     }
@@ -125,22 +129,37 @@ contract GoldRace {
         
         require(msg.sender == player1 || msg.sender == player2);
         
-        if (goldRaceDispute.isProposedStateValid()) {
-            // Current player is forced to accept the proposed state
-            state = proposedState;
-        } else {
-            // Previous player is forced to propose another proposed state
+        // Here isPlayer1Turn indicates the player who opened the dispute.
+        
+        if (!goldRaceDispute.isProposedStateValid()) {
+            /* The proposed state is not accepted
+            In case game continued, previous player should propose another move. */
             isPlayer1Turn = !isPlayer1Turn;
         }
-
-        // A valid state is defined and the dispute is closed
-        isProposedStateAccepted = true;
-        isDisputeOpen = false;
+        
+        // Here isPlayer1Turn indicates the player who lost the dispute.
+        
+        uint rewardForWinner = address(this).balance; // * percentage
+ 
+        if (isPlayer1Turn) {
+                player2.transfer(rewardForWinner);
+        } else {
+                player1.transfer(rewardForWinner);      
+        }
+        
+        // Here rewardForRandomCommitte should be distributed.
+        // uint rewardForRandomCommitte = address(this).balance * (1 - percentage);
+            
+        restart();
     }
     
-    function claimTimeoutVictory() public {
+    function claimVictory() public {
         require(!isDisputeOpen);
         
+        /* Note that a timeout may be related to the following events:
+        A) Adversary left or resigns the game at some point;
+        B) Adversary implicitily accepts a winning state by doing nothing. 
+        Do something may result in a dispute that he or she would lose anyway. */
         require(now >= moveExpiration);
         
         require(player1 != address(0));
@@ -153,11 +172,17 @@ contract GoldRace {
             player1.transfer(address(this).balance);      
         }
 
+        restart();
+    }
+    
+    function restart() internal {
         player1 = address(0);
         player2 = address(0);
+        isPlayer1Turn = true;
         betAmount = 0;
+        state = "";
+        proposedState = "";
+        isProposedStateAccepted = true;
+        isDisputeOpen = false;
     }
 }
-
-
-
