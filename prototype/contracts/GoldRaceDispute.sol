@@ -1,6 +1,4 @@
-pragma solidity 0.6.7;
-
-import "./_GoldRaceDispute.sol";
+pragma solidity >=0.4.21 <0.7.0;
 
 contract GoldRaceDispute {
     
