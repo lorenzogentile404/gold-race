@@ -123,7 +123,7 @@ contract GoldRace {
     }
     
     function closeDispute() public {
-        require(isDisputeOpen);
+        require(isDisputeOpen); // && goldRaceDispute.hasDisputeBeenResolved());
         
         require(isProposedStateAccepted == false);
         
@@ -186,3 +186,5 @@ contract GoldRace {
         isDisputeOpen = false;
     }
 }
+
+
