@@ -103,7 +103,7 @@ contract GoldRace {
         isProposedStateAccepted = false;
     }
     
-    function openDispute() public {
+    function openDispute(bytes32 _c1) public {
         require(!isDisputeOpen);
         
         require(isProposedStateAccepted == false);
@@ -112,14 +112,15 @@ contract GoldRace {
         
         require(player1 != address(0));
         require(player2 != address(0));
+        // For te
         if (isPlayer1Turn) {
             require(msg.sender == player1);
+            goldRaceDispute = new GoldRaceDispute(player1, player2, _c1);
         } else {
             require(msg.sender == player2);
+            goldRaceDispute = new GoldRaceDispute(player2, player1, _c1);
         }
-        
         isDisputeOpen = true;
-        goldRaceDispute = new GoldRaceDispute();
     }
     
     function closeDispute() public {
@@ -187,6 +188,3 @@ contract GoldRace {
         isDisputeOpen = false;
     }
 }
-
-
-

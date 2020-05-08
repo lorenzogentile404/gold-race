@@ -5,9 +5,7 @@ contract GoldRaceDispute {
     // Parties of the dispute
     address public prosecution;
     address public defence;
-    bytes public state = "";
-    bytes public proposedState = "";
-    
+
     // Variables necessary to generate random committee address prefix
     bytes32 public c1;
     bytes19 public r1;
@@ -28,29 +26,28 @@ contract GoldRaceDispute {
     address[] public approvingMembers;
     address[] public contraryMembers;
     uint256 votesCommitmentsCounter = 0;
-    uint256 public votesThreshold = 5;
+    uint256 public votesThreshold = 3;
     enum Status {R2PUBLISH, REVEAL, COMMITVOTE, REVEALVOTE, VALID, NOTVALID}
-    Status status = Status.R2PUBLISH;
+    Status public status = Status.R2PUBLISH;
     
-    constructor() public {
-        //prosecution = _player1;
-        //defence = _player2;
-        //state = _state;
-        //proposedState = _proposedState;
-        c1 = 0xd8d1bafb5c31fa4d1b1219af9981f1e4c769a81804f77536d2f8d28e49f15b7c; // This will come from prosecution
+    constructor(address _prosecution, address _defence, bytes32 _c1) public {
+        prosecution = _prosecution;
+        defence = _defence;
+        c1 = _c1; // This comes from prosecution
+        // e.g. "0xd8d1bafb5c31fa4d1b1219af9981f1e4c769a81804f77536d2f8d28e49f15b7c"
         // Open to "0x48b0517dc17384a96f0dde4440cc4101d2d7f6", 1
     }
     
-    // e.g., 0xc9b4b12795aff539b518febdb382f6930d336e
+    // e.g., "0xc9b4b12795aff539b518febdb382f6930d336e"
     function r2Publish(bytes19 _r2) public {
-        //require(msg.sender == defence);
+        require(msg.sender == defence);
         require(status == Status.R2PUBLISH);
         r2 = _r2;
         status = Status.REVEAL;
     }
     
     function reveal(bytes19 _r, uint256 _n) public {
-        //require(msg.sender == prosecution);
+        require(msg.sender == prosecution);
         require(status == Status.REVEAL);
         require(c1 == keccak256(abi.encodePacked(_r, _n)));
         r1 = _r;
@@ -84,7 +81,8 @@ contract GoldRaceDispute {
     }
     
     function commitVote(bytes32 _c) public {
-        // require(isMemberOfRandomCommitte(msg.sender));
+        // require(isMemberOfRandomCommitte(msg.sender)); This check is turned off for testing purposes
+        require(msg.sender != prosecution && msg.sender != defence);
         require(status == Status.COMMITVOTE);
         require(!votesCommitments[msg.sender].exists); // An address can vote just once
         votesCommitments[msg.sender] = VoteCommitment(_c, true, false);
@@ -142,8 +140,8 @@ contract GoldRaceDispute {
         return keccak256(abi.encodePacked(_r, _n));
     }
     
-    // true, 123 -> 0x48b0517dc17384a96f0dde4440cc4101d2d7f669f62c2a4395c27d7a2e791474
-    // false, 123 -> 0x0c995408c4b5a2753bd04b90076c88cae982eb7fd8c8929c22b3deff08db3eed
+    // true, 123 -> "0x48b0517dc17384a96f0dde4440cc4101d2d7f669f62c2a4395c27d7a2e791474"
+    // false, 123 -> "0x0c995408c4b5a2753bd04b90076c88cae982eb7fd8c8929c22b3deff08db3eed"
     function computeBitCommitment(bool _r, uint256 _n) pure public returns(bytes32) {
         return keccak256(abi.encodePacked(_r, _n));
     }
