@@ -1,7 +1,5 @@
 pragma solidity >=0.4.21 <0.7.0;
 
-import "./PRNGKECCAK256.sol";
-
 contract GoldRaceDispute {
     
     bool public hasDisputeBeenResolved = false;
@@ -10,13 +8,14 @@ contract GoldRaceDispute {
     address public prosecution;
     address public defence;
     
-    // Variable necessary to generate random seed
+    // Variable necessary to generate random committee address prefix
     bytes32 public c1;
     bytes32 public r1;
     bytes32 public r2;
-    uint256 public seed;
-    
-    PRNGKECCAK256 prng;
+    bytes20 public randomCommitteeAddressPrefix;
+    uint8 prefixThreshold = 15;
+    event RandomCommitteeAnnouncement(uint8 byteNumber, byte value);
+    event Comparison(byte v1, byte v2);
     
     constructor() public {
         //prosecution = _player1;
@@ -25,38 +24,58 @@ contract GoldRaceDispute {
         // Open to "0x48b0517dc17384a96f0dde4440cc4101d2d7f669f62c2a4395c27d7a2e791474", 1 
         
         // Default value for testing
-        r2 = 0x1029517dc17384a96f0dde4440cc4101d2d7f669f62c2a4395c27d7a2e795689;
+        r2 = 0xc9b4b12795aff539b518febdb382f6930d336eff7dff036a8bbb585ef06b6a2f;
     }
     
-    // e.g., 0x1029517dc17384a96f0dde4440cc4101d2d7f669f62c2a4395c27d7a2e795689
+    // e.g., 0xc9b4b12795aff539b518febdb382f6930d336eff7dff036a8bbb585ef06b6a2f
     function r2Publish(bytes32 _r2) public {
         //require(msg.sender == defence);
         r2 = _r2;
     }
     
-    function reveal(bytes32 _r, uint256 _n) public returns(bool){
+    function reveal(bytes32 _r, uint256 _n) public {
         //require(msg.sender == prosecution);
         require(c1 == keccak256(abi.encodePacked(_r, _n)));
         r1 = _r;
-        seed = uint(r1 ^ r2);
-        prng = new PRNGKECCAK256(seed);
-        return true;
+        randomCommitteeAddressPrefix = bytes20(r1 ^ r2);
+        announceRandomCommittee();
     }
+    
+    function announceRandomCommittee () internal {
+        uint8 byteNumber = 0;
+        for (byteNumber = 0; byteNumber < prefixThreshold; byteNumber++) {
+            emit RandomCommitteeAnnouncement(byteNumber, randomCommitteeAddressPrefix[byteNumber]);
+        }
+    }
+    
+    function isMemberOfRandomCommitte() public returns(bool) { //address _candidateAddress) internal returns(bool) {
+        address _candidateAddress = msg.sender;
+        uint8 byteNumber = 0;
+        bytes20 candidateAddressBytes = bytes20(_candidateAddress);
+        byte candidateValue;
+        byte randomCommitteValue;
+        uint matchCounter = 0;
+        for (byteNumber = 0; byteNumber < prefixThreshold; byteNumber++) {
+            candidateValue = candidateAddressBytes[byteNumber];
+            randomCommitteValue = randomCommitteeAddressPrefix[byteNumber];
+            emit Comparison(candidateValue, randomCommitteValue);
+            if (candidateValue == randomCommitteValue) {
+                matchCounter += 1;
+            }
+        }
+        return matchCounter == prefixThreshold;
+    }
+    
+    function vote() public {
+        //require(isMemberOfRandomCommitte(msg.sender));
+    } 
     
     function isProposedStateValid() public pure returns(bool) {
         // TODO
         return false;
     }
 
-
-    // Helper functions
-    function test() public returns(uint256[2] memory) {
-            return [prng.getPRN(19), prng.getPRN(19)];
-    }
-    
     //function computeCommitment(bytes32 r, uint256 n) pure public returns(bytes32) {
     //    return keccak256(abi.encodePacked(r, n));
     //}
 }
-
-
