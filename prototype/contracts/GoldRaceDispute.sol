@@ -10,34 +10,34 @@ contract GoldRaceDispute {
     
     // Variable necessary to generate random committee address prefix
     bytes32 public c1;
-    bytes32 public r1;
-    bytes32 public r2;
-    bytes20 public randomCommitteeAddressPrefix;
-    uint8 prefixThreshold = 15;
+    bytes19 public r1;
+    bytes19 public r2;
+    bytes19 public randomCommitteeAddressPrefix;
+    uint8 prefixThreshold = 15; // This can go from 1 to 19
     event RandomCommitteeAnnouncement(uint8 byteNumber, byte value);
     event Comparison(byte v1, byte v2);
     
     constructor() public {
         //prosecution = _player1;
         //defence = _player2;
-        c1 = 0x5026c1c20b7eb1bb979586796fcba65745acad62cd702cb7cfc19934f3982f38; // This will come from prosecution
-        // Open to "0x48b0517dc17384a96f0dde4440cc4101d2d7f669f62c2a4395c27d7a2e791474", 1 
+        c1 = 0xd8d1bafb5c31fa4d1b1219af9981f1e4c769a81804f77536d2f8d28e49f15b7c; // This will come from prosecution
+        // Open to "0x48b0517dc17384a96f0dde4440cc4101d2d7f6", 1 
         
         // Default value for testing
-        r2 = 0xc9b4b12795aff539b518febdb382f6930d336eff7dff036a8bbb585ef06b6a2f;
+        r2 = 0xc9b4b12795aff539b518febdb382f6930d336e;
     }
     
-    // e.g., 0xc9b4b12795aff539b518febdb382f6930d336eff7dff036a8bbb585ef06b6a2f
-    function r2Publish(bytes32 _r2) public {
+    // e.g., 0xc9b4b12795aff539b518febdb382f6930d336e
+    function r2Publish(bytes19 _r2) public {
         //require(msg.sender == defence);
         r2 = _r2;
     }
     
-    function reveal(bytes32 _r, uint256 _n) public {
+    function reveal(bytes19 _r, uint256 _n) public {
         //require(msg.sender == prosecution);
         require(c1 == keccak256(abi.encodePacked(_r, _n)));
         r1 = _r;
-        randomCommitteeAddressPrefix = bytes20(r1 ^ r2);
+        randomCommitteeAddressPrefix = bytes19(r1 ^ r2);
         announceRandomCommittee();
     }
     
@@ -48,8 +48,7 @@ contract GoldRaceDispute {
         }
     }
     
-    function isMemberOfRandomCommitte() public returns(bool) { //address _candidateAddress) internal returns(bool) {
-        address _candidateAddress = msg.sender;
+    function isMemberOfRandomCommitte(address _candidateAddress) internal returns(bool) {
         uint8 byteNumber = 0;
         bytes20 candidateAddressBytes = bytes20(_candidateAddress);
         byte candidateValue;
@@ -66,8 +65,9 @@ contract GoldRaceDispute {
         return matchCounter == prefixThreshold;
     }
     
-    function vote() public {
-        //require(isMemberOfRandomCommitte(msg.sender));
+    function vote() public returns(bool) {
+        // require(isMemberOfRandomCommitte(msg.sender));
+        return true;
     } 
     
     function isProposedStateValid() public pure returns(bool) {
@@ -75,7 +75,8 @@ contract GoldRaceDispute {
         return false;
     }
 
-    //function computeCommitment(bytes32 r, uint256 n) pure public returns(bytes32) {
-    //    return keccak256(abi.encodePacked(r, n));
-    //}
+    function computeCommitment(bytes19 r, uint256 n) pure public returns(bytes32) {
+        return keccak256(abi.encodePacked(r, n));
+    }
 }
+
