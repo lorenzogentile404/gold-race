@@ -123,7 +123,7 @@ contract GoldRace {
     }
     
     function closeDispute() public {
-        require(isDisputeOpen); // && goldRaceDispute.hasDisputeBeenResolved());
+        require(isDisputeOpen && goldRaceDispute.isDisputeEnded());
         
         require(isProposedStateAccepted == false);
         
@@ -149,6 +149,7 @@ contract GoldRace {
         
         // Here rewardForRandomCommitte should be distributed.
         // uint rewardForRandomCommitte = address(this).balance * (1 - percentage);
+        // goldRaceDispute.getMajorityToReward();
             
         restart();
     }
@@ -186,5 +187,6 @@ contract GoldRace {
         isDisputeOpen = false;
     }
 }
+
 
 
