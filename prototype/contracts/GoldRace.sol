@@ -16,7 +16,7 @@ contract GoldRace {
     bool public isProposedStateAccepted = true;
     
     bool public isDisputeOpen = false;
-    GoldRaceDispute goldRaceDispute;
+    GoldRaceDispute public goldRaceDispute;
     
     function createChallenge() public payable {
         require(!isDisputeOpen);
