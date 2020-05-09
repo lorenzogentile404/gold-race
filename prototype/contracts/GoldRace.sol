@@ -39,7 +39,7 @@ contract GoldRace {
         require(prefixThreshold < 20);
 
         // votesThreshold cannot be greater than the size of the random committee
-        // require(votesThreshold <= 2**((20 - prefixThreshold) * 8));
+        require(votesThreshold <= uint256(2)**((20 - prefixThreshold) * 8));
 
         /* minimumBet must be big enough to guarantee a reward for each member of
         the majority in a dispute and to the winning player. */
