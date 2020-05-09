@@ -144,9 +144,11 @@ contract GoldRaceDispute {
 
         if (status == Status.R2PUBLISH) {
             // Defence loses by timeout
+            require(msg.sender == prosecution);
             status = Status.NOTVALID;
         } else if (status == Status.REVEAL) {
             // Prosecution loses by timeout
+            require(msg.sender == defence);
             status = Status.VALID;
         }
     }

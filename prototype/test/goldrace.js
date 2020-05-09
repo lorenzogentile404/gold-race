@@ -52,6 +52,7 @@ contract('GoldRaceTest', (accounts) => {
   it('testOpenDispute', async () => {
     const goldRaceInstance = await GoldRace.deployed();
 
+    // Player 2 opens dispute
     await goldRaceInstance.openDispute("0xd8d1bafb5c31fa4d1b1219af9981f1e4c769a81804f77536d2f8d28e49f15b7c", {from: accounts[1]});
     assert.equal(await goldRaceInstance.isDisputeOpen(), true, "isDisputeOpen should be true");
 
@@ -61,6 +62,20 @@ contract('GoldRaceTest', (accounts) => {
     assert.equal(await goldRaceDisputeInstance.defence(), accounts[0], "accounts[0] should be defence");
   });
 
+  /*
+  it('testClaimDisputeVictory', async () => {
+    const goldRaceInstance = await GoldRace.deployed();
+    const goldRaceDisputeAddress = await goldRaceInstance.goldRaceDispute();
+    const goldRaceDisputeInstance = await GoldRaceDispute.at(goldRaceDisputeAddress);
+
+    // Here a time equal to timePerDispute should be simulated, so as dispute victory can be claimed
+    // Prosecution (player 2) claims victory
+    await goldRaceDisputeInstance.claimDisputeVictory({from: accounts[1]});
+
+    assert.equal(await goldRaceDisputeInstance.status(), 5, "Status should be 5"); // NOT VALID
+  });
+  */
+
   it('testDispute', async () => {
     const goldRaceInstance = await GoldRace.deployed();
     const goldRaceDisputeAddress = await goldRaceInstance.goldRaceDispute();
@@ -69,14 +84,17 @@ contract('GoldRaceTest', (accounts) => {
     const prosecution = await goldRaceDisputeInstance.prosecution();
     const defence = await goldRaceDisputeInstance.defence();
 
+    // Defence publishes r2
     assert.equal(await goldRaceDisputeInstance.status(), 0, "Status should be 0");
     await goldRaceDisputeInstance.r2Publish("0xc9b4b12795aff539b518febdb382f6930d336e", {from: defence});
 
+    // Prosecution reveals r1
     assert.equal(await goldRaceDisputeInstance.status(), 1, "Status should be 1");
     await goldRaceDisputeInstance.reveal("0x48b0517dc17384a96f0dde4440cc4101d2d7f6", 1, {from: prosecution});
 
     assert.equal(await goldRaceDisputeInstance.status(), 2, "Status should be 2");
 
+    // Commit vote phase
     // true, 123 -> "0x48b0517dc17384a96f0dde4440cc4101d2d7f669f62c2a4395c27d7a2e791474"
     // false, 123 -> "0x0c995408c4b5a2753bd04b90076c88cae982eb7fd8c8929c22b3deff08db3eed"
     await goldRaceDisputeInstance.commitVote("0x48b0517dc17384a96f0dde4440cc4101d2d7f669f62c2a4395c27d7a2e791474", {from: accounts[2]});
@@ -86,6 +104,7 @@ contract('GoldRaceTest', (accounts) => {
     assert.equal(await goldRaceDisputeInstance.status(), 3, "Status should be 3");
     assert.equal(await goldRaceDisputeInstance.votesCommitmentsCounter(), 3, "Votes commitments should be 3");
 
+    // Reveal vote phase
     await goldRaceDisputeInstance.revealVote(true, 123, {from: accounts[2]});
     await goldRaceDisputeInstance.revealVote(true, 123, {from: accounts[3]});
     await goldRaceDisputeInstance.revealVote(false, 123, {from: accounts[4]});
@@ -95,8 +114,9 @@ contract('GoldRaceTest', (accounts) => {
 
   it('testCloseDispute', async () => {
     const goldRaceInstance = await GoldRace.deployed();
-    
-    await goldRaceInstance.closeDispute();
+
+    // Player 1 closes dispute
+    await goldRaceInstance.closeDispute({from: accounts[0]});
     assert.equal(await web3.eth.getBalance(goldRaceInstance.address), 0, "balance is not 0 wei");
   });
 });
