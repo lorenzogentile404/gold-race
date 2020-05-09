@@ -30,18 +30,25 @@ contract GoldRaceDispute {
     enum Status {R2PUBLISH, REVEAL, COMMITVOTE, REVEALVOTE, VALID, NOTVALID}
     Status public status = Status.R2PUBLISH;
 
+    // Timeout for the dispute
+    uint256 public disputeExpiration;
+    uint256 public timePerDispute = 30 minutes;
+
     constructor(address _prosecution, address _defence, bytes32 _c1) public {
         prosecution = _prosecution;
         defence = _defence;
         c1 = _c1; // This comes from prosecution
         // e.g. "0xd8d1bafb5c31fa4d1b1219af9981f1e4c769a81804f77536d2f8d28e49f15b7c"
         // Open to "0x48b0517dc17384a96f0dde4440cc4101d2d7f6", 1
+        disputeExpiration = now + timePerDispute;
     }
 
     // e.g., "0xc9b4b12795aff539b518febdb382f6930d336e"
     function r2Publish(bytes19 _r2) public {
         require(msg.sender == defence);
         require(status == Status.R2PUBLISH);
+        require(now < disputeExpiration);
+
         r2 = _r2;
         status = Status.REVEAL;
     }
@@ -50,6 +57,8 @@ contract GoldRaceDispute {
         require(msg.sender == prosecution);
         require(status == Status.REVEAL);
         require(c1 == keccak256(abi.encodePacked(_r, _n)));
+        require(now < disputeExpiration);
+
         r1 = _r;
         randomCommitteeAddressPrefix = bytes19(r1 ^ r2);
         announceRandomCommittee();
@@ -85,6 +94,8 @@ contract GoldRaceDispute {
         require(msg.sender != prosecution && msg.sender != defence);
         require(status == Status.COMMITVOTE);
         require(!votesCommitments[msg.sender].exists); // An address can vote just once
+        require(now < disputeExpiration);
+
         votesCommitments[msg.sender] = VoteCommitment(_c, true, false);
         votesCommitmentsCounter += 1;
         if (votesCommitmentsCounter == votesThreshold) {
@@ -97,6 +108,8 @@ contract GoldRaceDispute {
         require(votesCommitments[msg.sender].exists);
         require(votesCommitments[msg.sender].c == keccak256(abi.encodePacked(_r, _n)));
         require(!votesCommitments[msg.sender].revealed); // This prevents counting a vote more than once
+        require(now < disputeExpiration);
+
         votesCommitments[msg.sender].revealed = true;
 
         if (_r) {
@@ -124,6 +137,18 @@ contract GoldRaceDispute {
 
     function isProposedStateValid() public view returns(bool) {
         return status == Status.VALID;
+    }
+
+    function claimDisputeVictory() public {
+        require(now >= disputeExpiration);
+
+        if (status == Status.R2PUBLISH) {
+            // Defence loses by timeout
+            status = Status.NOTVALID;
+        } else if (status == Status.REVEAL) {
+            // Prosecution loses by timeout
+            status = Status.VALID;
+        }
     }
 
     /*
