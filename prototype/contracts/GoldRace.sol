@@ -31,7 +31,7 @@ contract GoldRace {
     uint8 public prefixThreshold = 15;
 
     // Number of required members of the random committee voting
-    // It represents the maximum possible size of majority to reward
+    // It represents the maximum possible size of the majority to reward
     uint256 public votesThreshold = 3;
 
     constructor() public {
