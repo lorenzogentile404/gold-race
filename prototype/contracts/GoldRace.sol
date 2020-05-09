@@ -25,7 +25,7 @@ contract GoldRace {
 
     // minimumBet must be enough to guarantee rewardForEachMemberOfMajority in a dispute
     uint256 minimumBet = 1 ether;
-    uint256 rewardForEachMemberOfMajority = 1 finney;
+    uint256 rewardForEachMemberOfMajority = 100 finney;
 
     function createChallenge() public payable {
         require(!isDisputeOpen);
