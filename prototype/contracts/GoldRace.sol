@@ -8,7 +8,7 @@ contract GoldRace {
     address payable public player1 = address(0);
     address payable public player2 = address(0);
 
-    // State of the challenge
+    // Status of the challenge
     uint256 public betAmount = 0;
     bool public isPlayer1Turn = true;
     bytes public state = "";
@@ -23,13 +23,17 @@ contract GoldRace {
     bool public isDisputeOpen = false;
     GoldRaceDispute public goldRaceDispute;
 
+    // minimumBet must be enough to guarantee rewardForEachMemberOfMajority in a dispute
+    uint256 minimumBet = 1 ether;
+    uint256 rewardForEachMemberOfMajority = 1 finney;
+
     function createChallenge() public payable {
         require(!isDisputeOpen);
 
         require(player1 == address(0));
         require(player2 == address(0));
 
-        require(msg.value > 0);
+        require(msg.value >= minimumBet);
 
         player1 = msg.sender;
         betAmount = msg.value;
@@ -135,27 +139,28 @@ contract GoldRace {
 
         require(msg.sender == player1 || msg.sender == player2);
 
-        // Here isPlayer1Turn indicates the player who opened the dispute.
+        // Here rewardForRandomCommitte is distributed
+        address payable[] memory majorityToReward = goldRaceDispute.getMajorityToReward();
 
+        for (uint256 i = 0; i < majorityToReward.length; i++) {
+              majorityToReward[i].transfer(rewardForEachMemberOfMajority);
+        }
+
+        // Here isPlayer1Turn indicates the player who opened the dispute
         if (!goldRaceDispute.isProposedStateValid()) {
-            /* The proposed state is not accepted
-            In case game continued, previous player should propose another move. */
+            // The proposed state is not accepted
+            // In case game continued previous player should propose another move
             isPlayer1Turn = !isPlayer1Turn;
         }
 
-        // Here isPlayer1Turn indicates the player who lost the dispute.
-
-        uint rewardForWinner = address(this).balance; // * percentage
+        // Here isPlayer1Turn indicates the player who lost the dispute
+        uint rewardForWinner = address(this).balance;
 
         if (isPlayer1Turn) {
                 player2.transfer(rewardForWinner);
         } else {
                 player1.transfer(rewardForWinner);
         }
-
-        // Here rewardForRandomCommitte should be distributed.
-        // uint rewardForRandomCommitte = address(this).balance * (1 - percentage);
-        // goldRaceDispute.getMajorityToReward();
 
         restart();
     }

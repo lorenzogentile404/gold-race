@@ -7,9 +7,9 @@ contract('GoldRaceTest', (accounts) => {
     const goldRaceInstance = await GoldRace.deployed();
 
     // Player 1 creates challenge
-    assert.equal(await web3.eth.getBalance(goldRaceInstance.address), 0, "balance is not 0 wei");
-    await goldRaceInstance.createChallenge({from: accounts[0], value: 1});
-    assert.equal(await web3.eth.getBalance(goldRaceInstance.address), 1, "balance is not 1 wei");
+    assert.equal(await web3.eth.getBalance(goldRaceInstance.address), 0, "balance is not 0 ether");
+    await goldRaceInstance.createChallenge({from: accounts[0], value: web3.utils.toWei('1', 'ether')});
+    assert.equal(await web3.eth.getBalance(goldRaceInstance.address), web3.utils.toWei('1', 'ether'), "balance is not 1 ether");
   });
 
   it('testAcceptChallenge', async () => {
@@ -17,8 +17,8 @@ contract('GoldRaceTest', (accounts) => {
 
     // Player 2 accepts challenge
     assert.equal(await goldRaceInstance.player1(), accounts[0], "player1 is not accounts[0]");
-    await goldRaceInstance.acceptChallenge({from: accounts[1], gas: 3000000, value: 1});
-    assert.equal(await web3.eth.getBalance(goldRaceInstance.address), 2, "balance is not 2 wei");
+    await goldRaceInstance.acceptChallenge({from: accounts[1], gas: 3000000, value: web3.utils.toWei('1', 'ether')});
+    assert.equal(await web3.eth.getBalance(goldRaceInstance.address), web3.utils.toWei('2', 'ether'), "balance is not 2 ether");
     assert.equal(await goldRaceInstance.player2(), accounts[1], "player2 is not accounts[1]");
     assert.equal(await goldRaceInstance.isPlayer1Turn(), true, "player1 is not the first player to play");
   });
@@ -117,6 +117,6 @@ contract('GoldRaceTest', (accounts) => {
 
     // Player 1 closes dispute
     await goldRaceInstance.closeDispute({from: accounts[0]});
-    assert.equal(await web3.eth.getBalance(goldRaceInstance.address), 0, "balance is not 0 wei");
+    assert.equal(await web3.eth.getBalance(goldRaceInstance.address), 0, "balance is not 0 ether");
   });
 });

@@ -6,16 +6,24 @@ contract GoldRaceDispute {
     address public prosecution;
     address public defence;
 
+    // Status of the dispute
+    enum Status {R2PUBLISH, REVEAL, COMMITVOTE, REVEALVOTE, VALID, NOTVALID}
+    Status public status = Status.R2PUBLISH;
+
+    // Timeout of the dispute
+    uint256 public disputeExpiration;
+    uint256 public timePerDispute = 30 minutes;
+
     // Variables necessary to generate random committee address prefix
     bytes32 public c1;
     bytes19 public r1;
     bytes19 public r2;
     bytes19 public randomCommitteeAddressPrefix;
-    uint8 prefixThreshold = 15; // This can go from 1 to 19
+    uint8 prefixThreshold = 15; // Between 1 and 19
     event RandomCommitteeAnnouncement(uint8 byteNumber, byte value);
     event Comparison(byte v1, byte v2);
 
-    // Variables representing the votes;
+    // Variables representing the votes
     struct VoteCommitment {
         bytes32 c;
         bool exists;
@@ -23,16 +31,13 @@ contract GoldRaceDispute {
     }
     mapping(address => VoteCommitment) votesCommitments;
     mapping(address => bool) votes;
-    address[] public approvingMembers;
-    address[] public contraryMembers;
+    address payable[] public approvingMembers;
+    address payable[] public contraryMembers;
     uint256 public votesCommitmentsCounter = 0;
-    uint256 public votesThreshold = 3;
-    enum Status {R2PUBLISH, REVEAL, COMMITVOTE, REVEALVOTE, VALID, NOTVALID}
-    Status public status = Status.R2PUBLISH;
 
-    // Timeout for the dispute
-    uint256 public disputeExpiration;
-    uint256 public timePerDispute = 30 minutes;
+    // Number of required members of the random committee voting
+    // It represents the maximum possible size of majorityToReward
+    uint256 public votesThreshold = 3;
 
     constructor(address _prosecution, address _defence, bytes32 _c1) public {
         prosecution = _prosecution;
@@ -93,7 +98,7 @@ contract GoldRaceDispute {
         // require(isMemberOfRandomCommitte(msg.sender)); This check is turned off for testing purposes
         require(msg.sender != prosecution && msg.sender != defence);
         require(status == Status.COMMITVOTE);
-        require(!votesCommitments[msg.sender].exists); // An address can vote just once
+        require(!votesCommitments[msg.sender].exists); // This prevents commiting a vote more than once
         require(now < disputeExpiration);
 
         votesCommitments[msg.sender] = VoteCommitment(_c, true, false);
@@ -153,8 +158,7 @@ contract GoldRaceDispute {
         }
     }
 
-    /*
-    function getMajorityToReward() public view returns(address[] memory) {
+    function getMajorityToReward() public view returns(address payable[] memory) {
         if (status == Status.VALID) {
             return approvingMembers;
         } else if (status == Status.NOTVALID) {
@@ -162,6 +166,7 @@ contract GoldRaceDispute {
         }
     }
 
+    /*
     // Helper functions
     function computeCommitment(bytes19 _r, uint256 _n) pure public returns(bytes32) {
         return keccak256(abi.encodePacked(_r, _n));
