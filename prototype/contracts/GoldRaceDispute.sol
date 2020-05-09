@@ -19,7 +19,6 @@ contract GoldRaceDispute {
     bytes19 public r1;
     bytes19 public r2;
     bytes19 public randomCommitteeAddressPrefix;
-    uint8 prefixThreshold = 15; // Between 1 and 19
     event RandomCommitteeAnnouncement(uint8 byteNumber, byte value);
     event Comparison(byte v1, byte v2);
 
@@ -35,14 +34,19 @@ contract GoldRaceDispute {
     address payable[] public contraryMembers;
     uint256 public votesCommitmentsCounter = 0;
 
-    // Number of required members of the random committee voting
-    // It represents the maximum possible size of majorityToReward
-    uint256 public votesThreshold = 3;
+    // Define size of the random committee
+    uint8 public prefixThreshold;
 
-    constructor(address _prosecution, address _defence, bytes32 _c1) public {
+    // Number of required members of the random committee voting
+    // It represents the maximum possible size of majority to reward
+    uint256 public votesThreshold;
+
+    constructor(address _prosecution, address _defence, bytes32 _c1, uint8 _prefixThreshold, uint256 _votesThreshold) public {
         prosecution = _prosecution;
         defence = _defence;
         c1 = _c1; // This comes from prosecution
+        prefixThreshold = _prefixThreshold;
+        votesThreshold = _votesThreshold;
         // e.g. "0xd8d1bafb5c31fa4d1b1219af9981f1e4c769a81804f77536d2f8d28e49f15b7c"
         // Open to "0x48b0517dc17384a96f0dde4440cc4101d2d7f6", 1
         disputeExpiration = now + timePerDispute;

@@ -23,9 +23,28 @@ contract GoldRace {
     bool public isDisputeOpen = false;
     GoldRaceDispute public goldRaceDispute;
 
-    // minimumBet must be enough to guarantee rewardForEachMemberOfMajority in a dispute
+    // Variables necessary to guarantee rewards
     uint256 minimumBet = 1 ether;
     uint256 rewardForEachMemberOfMajority = 100 finney;
+
+    // Define size of the random committee
+    uint8 public prefixThreshold = 15;
+
+    // Number of required members of the random committee voting
+    // It represents the maximum possible size of majority to reward
+    uint256 public votesThreshold = 3;
+
+    constructor() public {
+        // Size of the random committe can be at most 2**(19*8)
+        require(prefixThreshold < 20);
+
+        // votesThreshold cannot be greater than the size of the random committee
+        // require(votesThreshold <= 2**((20 - prefixThreshold) * 8));
+
+        /* minimumBet must be big enough to guarantee a reward for each member of
+        the majority in a dispute and to the winning player. */
+        require(rewardForEachMemberOfMajority * votesThreshold < minimumBet);
+    }
 
     function createChallenge() public payable {
         require(!isDisputeOpen);
@@ -124,10 +143,10 @@ contract GoldRace {
 
         if (isPlayer1Turn) {
             require(msg.sender == player1);
-            goldRaceDispute = new GoldRaceDispute(player1, player2, _c1);
+            goldRaceDispute = new GoldRaceDispute(player1, player2, _c1, prefixThreshold, votesThreshold);
         } else {
             require(msg.sender == player2);
-            goldRaceDispute = new GoldRaceDispute(player2, player1, _c1);
+            goldRaceDispute = new GoldRaceDispute(player2, player1, _c1, prefixThreshold, votesThreshold);
         }
         isDisputeOpen = true;
     }
