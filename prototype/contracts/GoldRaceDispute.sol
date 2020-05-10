@@ -47,12 +47,9 @@ contract GoldRaceDispute {
         c1 = _c1; // This comes from prosecution
         prefixThreshold = _prefixThreshold;
         votesThreshold = _votesThreshold;
-        // e.g. "0xd8d1bafb5c31fa4d1b1219af9981f1e4c769a81804f77536d2f8d28e49f15b7c"
-        // Open to "0x48b0517dc17384a96f0dde4440cc4101d2d7f6", 1
         disputeExpiration = now + timePerDispute;
     }
 
-    // e.g., "0xc9b4b12795aff539b518febdb382f6930d336e"
     function r2Publish(bytes19 _r2) public {
         require(msg.sender == defence);
         require(status == Status.R2PUBLISH);

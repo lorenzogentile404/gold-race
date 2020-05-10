@@ -115,10 +115,18 @@ contract('GoldRaceTest', (accounts) => {
   it('testCloseDispute', async () => {
     const goldRaceInstance = await GoldRace.deployed();
 
+    var winnerBalance = await web3.eth.getBalance(accounts[1]);
+    var majorityBalance1 = await web3.eth.getBalance(accounts[2]);
+    var majorityBalance2 = await web3.eth.getBalance(accounts[3]);
+
     // Player 1 closes dispute
     await goldRaceInstance.closeDispute({from: accounts[1]});
 
-    // Player 1 and majority is rewarded
+    // Winner and majority are rewarded
+    assert.equal(web3.eth.getBalance(accounts[1]) > winnerBalance, true, "Winner has not been rewarded");
+    assert.equal(web3.eth.getBalance(accounts[2]) > majorityBalance1, true, "Majority 1 has not been rewarded");
+    assert.equal(web3.eth.getBalance(accounts[3]) > majorityBalance2, true, "Majority 2 has not been rewarded");
+
     // Balance of the contract is empty
     assert.equal(await web3.eth.getBalance(goldRaceInstance.address), 0, "balance is not 0 ether");
   });

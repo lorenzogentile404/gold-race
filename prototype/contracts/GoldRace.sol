@@ -23,7 +23,7 @@ contract GoldRace {
     bool public isDisputeOpen = false;
     GoldRaceDispute public goldRaceDispute;
 
-    // Variables necessary to guarantee rewards
+    // Variables necessary to define incentives to players and to the random committee
     uint256 minimumBet = 1 ether;
     uint256 rewardForEachMemberOfMajority = 100 finney;
 
@@ -41,8 +41,8 @@ contract GoldRace {
         // votesThreshold cannot be greater than the size of the random committee
         require(votesThreshold <= uint256(2)**((20 - prefixThreshold) * 8));
 
-        /* minimumBet must be big enough to guarantee a reward for each member of
-        the majority in a dispute and to the winning player. */
+        /* minimumBet must be big enough to guarantee a reward to the winner and
+        to each member of the majority in a dispute. */
         require(rewardForEachMemberOfMajority * votesThreshold < minimumBet);
     }
 
@@ -105,9 +105,8 @@ contract GoldRace {
         isProposedStateAccepted = true;
     }
 
-    // Example move: "0x67fa"
     function move(bytes memory _proposedState) public {
-        /* Note that _proposedState can include also a winning state
+        /* Note that _proposedState can include also a winning state,
         e.g., in the case of chess Qh5# indicates that the Queen goes
         to h5 and it is checkmate. */
         require(!isDisputeOpen);
